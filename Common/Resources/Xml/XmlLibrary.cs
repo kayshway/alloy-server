@@ -46,13 +46,34 @@ public static class XmlLibrary {
 
         Parallel.ForEach(files, file => {
             _log.Debug($"Loading XML {file}...");
-            MakeDictionaries(XElement.Parse(File.ReadAllText(file)));
+            try {
+                MakeDictionaries(XElement.Parse(File.ReadAllText(file)));
+            } catch (Exception e) {
+                XmlLoadReport.Skipped($"file {Path.GetFileName(file)}", e);
+            }
         });
+
+        var report = XmlLoadReport.Write(Path.GetFullPath("xml-load-report.txt"));
+        if (XmlLoadReport.SkippedCount > 0 || XmlLoadReport.UnknownCount > 0) {
+            _log.Warn($"XML: skipped {XmlLoadReport.SkippedCount} entries and ignored {XmlLoadReport.UnknownCount} unsupported values (details: {report})");
+        }
+
         _log.Info("XML Library loaded successfully.");
     }
 
     private static void MakeDictionaries(XElement root) {
         Parallel.ForEach(root.Elements(), xml => {
+            try {
+                MakeEntry(xml);
+            } catch (Exception e) {
+                // One unreadable object must not take the whole server down.
+                XmlLoadReport.Skipped($"{xml.Name.LocalName} '{xml.Attribute("id")?.Value}' ({xml.Attribute("type")?.Value})", e);
+            }
+        });
+    }
+
+    private static void MakeEntry(XElement xml) {
+        {
             var id = xml.GetAttribute<string>("id");
             var type = xml.GetAttribute<ushort>("type");
 
@@ -83,7 +104,7 @@ public static class XmlLibrary {
                     if (objDesc.Terrain != TerrainType.None /* && xml.HasElement("Spawn")*/
                        ) // Entities spawned by Oryx in the Realm
                     {
-                        var terrain = Enum.Parse<TerrainType>(xml.Element("Terrain").Value);
+                        var terrain = objDesc.Terrain;
                         if (!TerrainEnemies.TryGetValue(terrain, out var list))
                             list = TerrainEnemies[terrain] = new List<ObjectDesc>();
                         list.Add(objDesc);
@@ -96,7 +117,7 @@ public static class XmlLibrary {
                 TileDescs.TryAdd(type, tile);
                 _id2Tile.TryAdd(id, tile);
             }
-        });
+        }
     }
 
     public static ObjectDesc Id2Object(string id, bool caseSensitive = true) {

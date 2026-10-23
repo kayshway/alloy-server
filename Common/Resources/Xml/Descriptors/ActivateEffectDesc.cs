@@ -13,7 +13,7 @@ public class ActivateEffectDesc : ItemData {
             return;
         }
 
-        AEIndex = (ActivateEffectIndex)Enum.Parse(typeof(ActivateEffectIndex), e.Value.Replace(" ", ""));
+        AEIndex = XmlLoadReport.ParseEnum(e.Value, ActivateEffectIndex.None);
         DurationMS = (int)(e.GetAttribute<float>("duration") * 1000);
         Range = e.GetAttribute<float>("range");
         Amount = e.GetAttribute<int>("amount");
@@ -22,7 +22,7 @@ public class ActivateEffectDesc : ItemData {
         MaxTargets = e.GetAttribute<int>("maxTargets");
 
         EffectDesc = new ConditionEffectDesc(
-            Utils.GetEnumValue<ConditionEffectIndex>(e.GetAttribute<string>("effect")),
+            XmlLoadReport.ParseEnum(e.GetAttribute<string>("effect"), ConditionEffectIndex.Nothing),
             (int)(e.GetAttribute<float>("condDuration") * 1000));
 
         Color = e.GetAttribute<uint>("color");

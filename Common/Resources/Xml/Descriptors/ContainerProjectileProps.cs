@@ -49,7 +49,7 @@ public record ProjectileProps {
         MaxDamage = e.GetValue("MaxDamage", Damage);
 
         Effects = e.Elements("ConditionEffect")
-            .Select(i => ((ConditionEffectIndex)Enum.Parse(typeof(ConditionEffectIndex), i.Value.Replace(" ", "")),
+            .Select(i => (XmlLoadReport.ParseEnum(i.Value, ConditionEffectIndex.Nothing),
                 (int)(i.GetAttribute<float>("duration") * 1000)))
             .ToArray();
 

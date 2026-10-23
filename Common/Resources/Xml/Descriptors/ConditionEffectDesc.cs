@@ -20,7 +20,7 @@ public class ConditionEffectDesc : ItemData {
             return;
         }
 
-        Effect = (ConditionEffectIndex)Enum.Parse(typeof(ConditionEffectIndex), e.Value.Replace(" ", ""));
+        Effect = XmlLoadReport.ParseEnum(e.Value, ConditionEffectIndex.Nothing);
         DurationMS = (int)(e.GetAttribute<float>("duration") * 1000);
 
         _initialized = true;

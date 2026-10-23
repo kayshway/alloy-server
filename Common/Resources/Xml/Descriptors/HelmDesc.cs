@@ -20,7 +20,7 @@ public class HelmDesc : ItemData {
         StackLost = e.GetValue<short>("StackLost");
         StatsModifier = e.Elements("StatsModifier").Select(i => new GemstoneBoost(i)).ToArray();
         HoldEffects = e.Elements("HoldEffect").Select(i =>
-            (ConditionEffectIndex)Enum.Parse(typeof(ConditionEffectIndex), i.Value.Replace(" ", ""))).ToArray();
+            XmlLoadReport.ParseEnum(i.Value, ConditionEffectIndex.Nothing)).ToArray();
         MpDrain = e.GetValue<short>("MpDrain");
 
         _initialized = true;

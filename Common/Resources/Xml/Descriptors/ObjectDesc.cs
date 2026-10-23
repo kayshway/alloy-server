@@ -111,7 +111,7 @@ public class ObjectDesc {
         Spawn = e.HasElement("Spawn") ? new SpawnDesc(e.Element("Spawn")) : null;
         Texture = e.HasElement("Texture") ? new TextureDesc(e.Element("Texture")) : null;
         var terrainValue = e.GetValue<string>("Terrain");
-        Terrain = terrainValue == null ? TerrainType.None : Enum.Parse<TerrainType>(terrainValue);
+        Terrain = XmlLoadReport.ParseEnum(terrainValue, TerrainType.None);
         Projectiles = !e.HasElement("Projectile")
             ? new ProjectileCollection([])
             : new ProjectileCollection(e.Elements("Projectile").Select(i => new ContainerProjectileProps(i)));
