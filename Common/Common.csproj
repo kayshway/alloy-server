@@ -520,6 +520,14 @@
       </Content>
     </ItemGroup>
 
+    <!-- Every world config and map in Resources\World\Data is copied, so a new dungeon only needs
+         its .json and .jm dropped in (for example from AlloyClient's tools/recorder). -->
+    <ItemGroup>
+      <None Update="Resources\World\Data\**\*.json;Resources\World\Data\**\*.jm;Resources\World\Data\**\*.wmap">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
     <!-- Remove previously copied XMLs first, so files dropped or renamed by a data update
          don't linger in the server's output and load twice. -->
     <Target Name="CleanAlloyXmls" BeforeTargets="CopyFilesToOutputDirectory">

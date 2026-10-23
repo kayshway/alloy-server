@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using Common.Game;
@@ -86,7 +86,7 @@ public class World {
     public void Load(int mapId) {
         var maps = WorldLibrary.MapDatas[Config.Name];
         if (mapId == -1)
-            mapId = Random.Shared.Next(maps.Length - 1);
+            mapId = Random.Shared.Next(maps.Length); // upper bound is exclusive
         
         Map = new WorldMap(this, maps[mapId]);
         LoadEntities();

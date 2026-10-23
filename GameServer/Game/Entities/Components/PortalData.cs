@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Reflection;
 using Common;
 using Common.Game;
@@ -51,10 +51,15 @@ public struct PortalData : IEntityIdentifiable, IDisposable {
             return;
         }
 
-        if (!_worldTypes.TryGetValue(worldConfig.Name, out var worldType)) {
-            _log.Error($"World logic doesn't exist for '{worldName}' ({en.Desc.ObjectId})");
+        if (worldConfig.Id == 0 && (!WorldLibrary.MapDatas.TryGetValue(worldConfig.Name, out var maps) || maps == null || maps.Length == 0)) {
+            _log.Error($"World '{worldName}' has no map ({en.Desc.ObjectId})");
             return;
         }
+
+        // Most dungeons need no special logic (only Nexus, Realm and Vault have a class),
+        // so anything without one runs as a plain World using its config and map.
+        if (!_worldTypes.TryGetValue(worldConfig.Name, out var worldType))
+            worldType = typeof(World);
         
         var worldInstance = worldConfig.Id == 0
             ? (World)Activator.CreateInstance(worldType, worldConfig.Id, -1, worldConfig)

@@ -360,3 +360,8 @@ MigrationBackup/
 .idea/tasks.xml
 .idea/dictionaries
 .idea/libraries/
+# Maps, configs and behaviors made from your own recordings of the official game (tools/recorder in AlloyClient).
+# They are DECA content: keep them on your PC.
+Common/Resources/World/Data/Rec_*
+Common/Resources/World/Data/Config/Rec_*
+GameServer/Game/Entities/Behaviors/Library/BehaviorLib.Rec*.cs
