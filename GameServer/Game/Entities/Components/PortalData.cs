@@ -32,15 +32,22 @@ public struct PortalData : IEntityIdentifiable, IDisposable {
     
     private readonly World _world;
     private World _worldLink;
-    
+
+    // Where the portal leads, worked out when the portal appears. The world itself is
+    // only made the first time someone uses the portal: making it right away loaded
+    // every dungeon (and every portal inside those) while the Nexus was still loading.
+    private WorldConfig _target;
+    private Type _targetType;
+    private static readonly object _createLock = new();
+
     public PortalData(World world, ref Entity en) {
         Id = en.Id;
         _world = world;
 
-        LoadWorld(ref en);
+        ResolveWorld(ref en);
     }
 
-    private void LoadWorld(ref Entity en) {
+    private void ResolveWorld(ref Entity en) {
         if (en.Desc.RealmPortal)
             return;
 
@@ -60,12 +67,33 @@ public struct PortalData : IEntityIdentifiable, IDisposable {
         // so anything without one runs as a plain World using its config and map.
         if (!_worldTypes.TryGetValue(worldConfig.Name, out var worldType))
             worldType = typeof(World);
-        
-        var worldInstance = worldConfig.Id == 0
-            ? (World)Activator.CreateInstance(worldType, worldConfig.Id, -1, worldConfig)
-            : RealmManager.Worlds[worldConfig.Id];
-        
-        Init(worldInstance);
+
+        _target = worldConfig;
+        _targetType = worldType;
+    }
+
+    /// <summary>Makes (or finds) the world this portal leads to. Null if it can't.</summary>
+    private World CreateWorld() {
+        if (_targetType == null)
+            return null;
+
+        if (_target.Id != 0) { // a fixed world such as the Nexus
+            if (RealmManager.Worlds.TryGetValue(_target.Id, out var fixedWorld))
+                return fixedWorld;
+            _log.Error($"World '{_target.DisplayName}' (id {_target.Id}) is not running.");
+            return null;
+        }
+
+        try {
+            var world = (World)Activator.CreateInstance(_targetType, _target.Id, -1, _target);
+            RealmManager.AddWorld(world);
+            return world;
+        } catch (Exception e) {
+            var inner = e is System.Reflection.TargetInvocationException { InnerException: not null } t ? t.InnerException : e;
+            _log.Error($"Could not open '{_target.DisplayName}': {inner}");
+            _targetType = null; // don't retry a broken world on every click
+            return null;
+        }
     }
 
     public void Init(World worldLink) {
@@ -78,6 +106,11 @@ public struct PortalData : IEntityIdentifiable, IDisposable {
     }
 
     public World GetWorldInstance(User user) {
+        if (_worldLink == null) {
+            lock (_createLock) {
+                _worldLink ??= CreateWorld();
+            }
+        }
         if (_worldLink == null)
             return null;
         return _worldLink.GetInstance(user);
